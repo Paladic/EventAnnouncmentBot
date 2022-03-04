@@ -37,7 +37,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Modules\SlashCommands\General\Admin" />
       <Folder Include="Modules\SlashCommands\General\User" />
     </ItemGroup>
 

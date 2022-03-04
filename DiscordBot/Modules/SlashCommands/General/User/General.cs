@@ -112,7 +112,18 @@ namespace DiscordBot.Modules.SlashCommands.General.User
             
             var channel = await Context.Guild.GetChannelAsync(channelId);
 
-            await ((SocketTextChannel) channel).SendMessageAsync(mentionRoles, embed: embed);
+            var msg = await ((SocketTextChannel) channel).SendMessageAsync(mentionRoles, embed: embed);
+            
+            if (eventDay == "сейчас")
+            {
+                await ((SocketTextChannel) channel).CreateThreadAsync("Обсуждение ивента", message:msg);
+            }
+
+            if (eventDay != "сейчас" && eventName == "бункер")
+            {
+                await msg.AddReactionAsync(new Emoji("✅"));
+            }
+
             await Context.Interaction.ModifyOriginalResponseAsync(x => x.Content = "сообщение отправлено");
         }
 }
