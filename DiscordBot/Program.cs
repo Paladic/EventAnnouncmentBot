@@ -8,7 +8,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord.Commands;
-using DiscordBot.Data.Context;
 using Discordbot.Services;
 using Fergun.Interactive;
 using Microsoft.EntityFrameworkCore;
@@ -41,7 +40,7 @@ namespace Discordbot
         {
             // Dependency injection is a key part of the Interactions framework but it needs to be disposed at the end of the app's lifetime.
             var name = IsDebug() ? "Debug" : "Default";
-            using var services = ConfigureServices(cf, configuration, name);
+            using var services = ConfigureServices(cf);
             
 
             var client = services.GetRequiredService<DiscordSocketClient>();
@@ -64,7 +63,6 @@ namespace Discordbot
             // Here we can initialize the service that will register and execute our commands
             await services.GetRequiredService<StatusHandler>().InitializeAsync();
             await services.GetRequiredService<SlashCommandHandler>().InitializeAsync();
-            await services.GetRequiredService<TextCommandHandler>().InitializeAsync();
             // Bot token can be provided from the Configuration object we set up earlier
             if(IsDebug())
                 await client.LoginAsync(TokenType.Bot, configuration["DebugToken"]);
@@ -114,26 +112,20 @@ namespace Discordbot
             if (message.Exception != null)
             {
                 Console.WriteLine("========================\n" + message.Exception + "\n========================");
-            }
+            }           
             return Task.CompletedTask;
         }
-
-        static ServiceProvider ConfigureServices (DiscordSocketConfig configuration, IConfiguration _configuration, string name)
+                                                    
+        static ServiceProvider ConfigureServices (DiscordSocketConfig configuration)
         {
             return new ServiceCollection()
                 .AddSingleton(new DiscordSocketClient(configuration))
-                //.AddSingleton<DiscordSocketClient>()
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
                 .AddSingleton(x => new CommandService())
-                .AddSingleton<TextCommandHandler>()
                 .AddSingleton<StatusHandler>()
                 .AddSingleton<SlashCommandHandler>()
                 .AddSingleton<InteractiveService>()
                 
-                /*.AddDbContextFactory<DiscordBotDbContext>(options => 
-                    options.UseMySql(_configuration.GetConnectionString(name),
-                        new MySqlServerVersion(new Version(8,0,27))))
-                */
                 .BuildServiceProvider();
         }
 

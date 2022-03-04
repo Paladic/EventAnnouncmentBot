@@ -2,6 +2,7 @@
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
 using IResult = Discord.Interactions.IResult;
 
 namespace Discordbot.Services
@@ -11,7 +12,7 @@ namespace Discordbot.Services
         private readonly DiscordSocketClient _client;
         private readonly InteractionService _commands;
         private readonly IServiceProvider _services;
-
+                                                                    
         public SlashCommandHandler(DiscordSocketClient client, InteractionService commands, 
             IServiceProvider services)
         {
@@ -184,6 +185,35 @@ namespace Discordbot.Services
             {
                 return;
             }
+
+            IConfiguration appsettings = new ConfigurationBuilder()
+                .AddJsonFile($"appsettings.json", optional: true)
+                .Build();
+
+            var rolesJson = appsettings["eventAnnouncementRolesId"];
+            var roles = rolesJson.Split(", ");
+            var rolesId = Array.Empty<ulong>();
+            var access = false;
+            
+            foreach (var r in roles)
+            {
+                if (ulong.TryParse(r, out var d))
+                {
+                    if (((SocketGuildUser) command.User).Roles.Any(x => x.Id == d))
+                    {
+                        access = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (!access && !((SocketGuildUser) command.User).GuildPermissions.Administrator)
+            {
+
+                await command.RespondAsync("У вас нет прав использовать эту команду");
+                return;
+            }
+
             try
             {
                 // Create an execution context that matches the generic type parameter of your InteractionModuleBase<T> modules
